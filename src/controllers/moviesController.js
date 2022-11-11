@@ -62,10 +62,9 @@ const moviesController = {
         const apiKey = process.env.OMDB_API_KEY
 
         try {
-            let response = await fetch(`${urlBase}?apiKey=${apiKey}&s=${titulo}`);
+            let response = await fetch(`${urlBase}?apiKey=${apiKey}&t=${titulo}`);
             let movie = await response.json();
 
-            
             return res.render ("moviesDetailOmdb", {
                 movie
             })
