@@ -4,6 +4,7 @@ const sequelize = db.sequelize;
 const { Op } = require("sequelize");
 const moment = require('moment');
 const fetch = require('node-fetch');
+const { title } = require('process');
 
 
 //Aqui tienen otra forma de llamar a cada uno de los modelos
@@ -62,9 +63,45 @@ const moviesController = {
         const apiKey = process.env.OMDB_API_KEY
 
         try {
-            let response = await fetch(`${urlBase}?apiKey=${apiKey}&t=${titulo}`);
-            let movie = await response.json();
 
+            let movie = await db.Movie.findOne({
+                where: {
+                    title: {
+                        [Op.substring] : titulo
+                    }
+                }
+            })
+
+            if(!movie){
+                let response = await fetch(`${urlBase}?apiKey=${apiKey}&t=${titulo}`);
+                movie = await response.json();
+
+                
+                const {Title, Released, imdbRating, Awards, Runtime} = movie
+
+                /* let awardsArray = Awards.split(" ")
+                let awardsFilter = awardsArray.filter(char => !isNaN(char))
+                let awardsTotal = awardsFilter.reduce((acum, num) => +acum + +num) */
+                
+                await db.Movie.create({
+                    title: Title,
+                    rating: +imdbRating,
+                    awards: Awards.split(" ").filter(char => !isNaN(char)).reduce((acum, num) => +acum + +num),
+                    release_date: moment(Released),
+                    length: parseInt(Runtime),
+                    genre_id:null
+                })
+
+            }else{
+                const {title, release_date, awards, length} = movie
+                movie = {
+                    Title : title,
+                    Poster: "http://localhost:3001/img/logo-DH.png",
+                    Year: moment(release_date).format("YYYY"),
+                    Awards: awards,
+                    Runtime: length
+                }
+            }
             return res.render ("moviesDetailOmdb", {
                 movie
             })
