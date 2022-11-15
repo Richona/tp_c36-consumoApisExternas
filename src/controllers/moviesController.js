@@ -76,36 +76,37 @@ const moviesController = {
                 let response = await fetch(`${urlBase}?apiKey=${apiKey}&t=${titulo}`);
                 movie = await response.json();
 
-                if (movie && movie.Response) {
-                    throw res.send("No hay pelicula")
+                const { Title, Released, imdbRating, Awards, Runtime, Poster } = movie
+
+                /* let awardsArray = Awards.split(" ")
+                let awardsFilter = awardsArray.filter(char => !isNaN(char))
+                let awardsTotal = awardsFilter.reduce((acum, num) => +acum + +num) */
+
+                if (movie && movie.Error === 'Movie not found!') {
+                    return res.send("No hay pelicula con ese nombre")
                 } else {
-                    const { Title, Released, imdbRating, Awards, Runtime } = movie
-
-                    /* let awardsArray = Awards.split(" ")
-                    let awardsFilter = awardsArray.filter(char => !isNaN(char))
-                    let awardsTotal = awardsFilter.reduce((acum, num) => +acum + +num) */
-
-
                     await db.Movie.create({
                         title: Title,
                         rating: +imdbRating,
                         awards: Awards.split(" ").filter(char => !isNaN(char)).reduce((acum, num) => +acum + +num),
+                        image: Poster,
                         release_date: moment(Released),
                         length: parseInt(Runtime),
                         genre_id: null
                     })
                 }
-
+                
             } else {
-                const { title, release_date, awards, length } = movie
+                const { title, release_date, awards, image, length } = movie
                 movie = {
                     Title: title,
-                    Poster: "http://localhost:3001/img/logo-DH.png",
+                    Poster: image ? image : "http://localhost:3001/img/logo-DH.png",
                     Year: moment(release_date).format("YYYY"),
                     Awards: awards,
                     Runtime: length
                 }
             }
+
             return res.render("moviesDetailOmdb", {
                 movie
             })

@@ -21,6 +21,9 @@ module.exports = (sequelize, dataTypes) => {
             type: dataTypes.BIGINT(10).UNSIGNED,
             allowNull: false
         },
+        image: {
+            type: dataTypes.STRING(500),
+        },
         release_date: {
             type: dataTypes.DATEONLY,
             allowNull: false
