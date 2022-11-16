@@ -115,6 +115,7 @@ const moviesAPIController = {
                     total: movie.length,
                     url: 'api/movies/create'
                 },
+                msg: "Pelicula creada con exito",
                 data: {
                     movie
                 }
@@ -136,44 +137,42 @@ const moviesAPIController = {
             })
         }
     },
-    update: (req, res) => {
-        let movieId = req.params.id;
-        Movies.update(
-            {
-                title: req.body.title,
-                rating: req.body.rating,
-                awards: req.body.awards,
-                release_date: req.body.release_date,
-                length: req.body.length,
-                genre_id: req.body.genre_id
-            },
-            {
-                where: { id: movieId }
-            })
-            .then(confirm => {
-                let respuesta;
-                if (confirm) {
-                    respuesta = {
-                        meta: {
-                            status: 200,
-                            total: confirm.length,
-                            url: 'api/movies/update/:id'
-                        },
-                        data: confirm
-                    }
-                } else {
-                    respuesta = {
-                        meta: {
-                            status: 204,
-                            total: confirm.length,
-                            url: 'api/movies/update/:id'
-                        },
-                        data: confirm
-                    }
+    update: async (req, res) => {
+        const { title, rating, awards, release_date, length, genre_id } = req.body;
+
+        try {
+            let movieId = req.params.id;
+            let movie = await db.Movie.findByPk(movieId);
+
+            movie.title = title?.trim() || movie.title;
+            movie.rating = rating || movie.rating
+            movie.awards = awards || movie.awards
+            movie.release_date = release_date || movie.release_date
+            movie.length = length || movie.length
+            movie.genre_id = genre_id || movie.genre_id
+
+            await movie.save()
+
+
+            return res.status(200).json({
+                ok: true,
+                meta: {
+                    status: 200,
+                    total: movie.length,
+                    url: 'api/movies/update/:id'
+                },
+                msg: "Pelicula actualizada con exito",
+                data: {
+                    movie
                 }
-                res.json(respuesta);
             })
-            .catch(error => res.send(error))
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                ok: false,
+                status: error.status || 500,
+                message: error.message || "upss, error!!!",
+            })
+        }
     },
     destroy: (req, res) => {
         let movieId = req.params.id;
