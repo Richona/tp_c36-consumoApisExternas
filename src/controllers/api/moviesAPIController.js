@@ -46,6 +46,12 @@ const moviesAPIController = {
     'detail': async (req, res) => {
         try {
             let movie = await db.Movie.findByPk(req.params.id, { include: ['genre'] })
+            
+            if (!movie) {
+                let error = new Error("No hay pelicula con ese id");
+                error.status = 404;
+                throw error
+            }
 
             return res.status(200).json({
                 ok: true,
@@ -58,7 +64,7 @@ const moviesAPIController = {
             })
         } catch (error) {
             console.log(error)
-            const showErrors = error.errors.map(error => {
+            const showErrors = error.errors && error.errors.map(error => {
                 return {
                     path: error.path,
                     message: error.message
@@ -68,7 +74,7 @@ const moviesAPIController = {
             return res.status(error.status || 500).json({
                 ok: false,
                 status: error.status || 500,
-                errors: showErrors,
+                errors: showErrors || error.message,
             })
         }
     },
@@ -174,36 +180,44 @@ const moviesAPIController = {
             })
         }
     },
-    destroy: (req, res) => {
-        let movieId = req.params.id;
-        Movies
-            .destroy({ where: { id: movieId }, force: true }) // force: true es para asegurar que se ejecute la acción
-            .then(confirm => {
-                let respuesta;
-                if (confirm) {
-                    respuesta = {
-                        meta: {
-                            status: 200,
-                            total: confirm.length,
-                            url: 'api/movies/destroy/:id'
-                        },
-                        data: confirm
-                    }
-                } else {
-                    respuesta = {
-                        meta: {
-                            status: 204,
-                            total: confirm.length,
-                            url: 'api/movies/destroy/:id'
-                        },
-                        data: confirm
+    destroy: async (req, res) => {
+        try {
+            let movieId = req.params.id;
+
+            await db.Actor.update(
+                {
+                    favorite_movie_id: null
+                },
+                {
+                    where: {
+                        favorite_movie_id: movieId
                     }
                 }
-                res.json(respuesta);
-            })
-            .catch(error => res.send(error))
-    }
+            )
 
+            await db.Movie.destroy({
+                where: {
+                    id: movieId
+                },
+                force: true// force: true es para asegurar que se ejecute la acción
+            })
+
+            return res.status(200).json({
+                ok: true,
+                meta: {
+                    status: 200,
+                    url: 'api/movies/delete/:id'
+                },
+                msg: "Pelicula eliminada con exito"
+            })
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                ok: false,
+                status: error.status || 500,
+                message: error.message || "upss, error!!!",
+            })
+        }
+    }
 }
 
 module.exports = moviesAPIController;
