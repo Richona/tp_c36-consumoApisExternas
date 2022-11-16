@@ -43,9 +43,9 @@ const moviesAPIController = {
 
     },
 
-    'detail': async(req, res) => {
+    'detail': async (req, res) => {
         try {
-            let movie = await db.Movie.findByPk(req.params.id,{include: ['genre']})
+            let movie = await db.Movie.findByPk(req.params.id, { include: ['genre'] })
 
             return res.status(200).json({
                 ok: true,
@@ -95,42 +95,46 @@ const moviesAPIController = {
             })
             .catch(error => console.log(error))
     },
-    create: (req, res) => {
-        Movies
-            .create(
-                {
-                    title: req.body.title,
-                    rating: req.body.rating,
-                    awards: req.body.awards,
-                    release_date: req.body.release_date,
-                    length: req.body.length,
-                    genre_id: req.body.genre_id
-                }
-            )
-            .then(confirm => {
-                let respuesta;
-                if (confirm) {
-                    respuesta = {
-                        meta: {
-                            status: 200,
-                            total: confirm.length,
-                            url: 'api/movies/create'
-                        },
-                        data: confirm
-                    }
-                } else {
-                    respuesta = {
-                        meta: {
-                            status: 200,
-                            total: confirm.length,
-                            url: 'api/movies/create'
-                        },
-                        data: confirm
-                    }
-                }
-                res.json(respuesta);
+    create: async (req, res) => {
+        try {
+            const { title, rating, awards, release_date, length, genre_id } = req.body;
+
+            const movie = await db.Movie.create({
+                title: title?.trim(),
+                rating,
+                awards,
+                release_date,
+                length,
+                genre_id
             })
-            .catch(error => res.send(error))
+
+            return res.status(200).json({
+                ok: true,
+                meta: {
+                    status: 200,
+                    total: movie.length,
+                    url: 'api/movies/create'
+                },
+                data: {
+                    movie
+                }
+            })
+
+        } catch (error) {
+            console.log(error)
+            const showErrors = error.errors.map(error => {
+                return {
+                    path: error.path,
+                    message: error.message
+                }
+            })
+
+            return res.status(error.status || 500).json({
+                ok: false,
+                status: error.status || 500,
+                errors: showErrors,
+            })
+        }
     },
     update: (req, res) => {
         let movieId = req.params.id;
