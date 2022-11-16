@@ -22,7 +22,7 @@
             <label for="awards">Premios </label>
             <p><input type="number" name="awards" id="" value="<%= Movie.awards %>" required></p>
             <label for="release_date">Fecha de creación </label>
-            <p><input type="date" name="release_date" id="" value="<%= Movie.release_date %> required"></p>
+            <p><input type="date" name="release_date" id="" value="<%= moment(Movie.release_date).format("YYYY-MM-DD") %>" required></p>
             <label for="length">Duración </label>
             <p><input type="number" name="length" id="" value="<%= Movie.length %>" required></p>
             <label for="genre_id">Género </label>

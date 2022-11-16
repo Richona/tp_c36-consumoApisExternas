@@ -151,8 +151,7 @@ const moviesController = {
         Promise
             .all([promMovies, promGenres, promActors])
             .then(([Movie, allGenres, allActors]) => {
-                Movie.release_date = moment(Movie.release_date).format('L');
-                return res.render(path.resolve(__dirname, '..', 'views', 'moviesEdit'), { Movie, allGenres, allActors })
+                return res.render(path.resolve(__dirname, '..', 'views', 'moviesEdit'), { Movie, allGenres, allActors, moment: moment})
             })
             .catch(error => res.send(error))
     },
@@ -172,7 +171,7 @@ const moviesController = {
                     where: { id: movieId }
                 })
             .then(() => {
-                return res.redirect('/movies')
+                return res.redirect('/movies',)
             })
             .catch(error => res.send(error))
     },
